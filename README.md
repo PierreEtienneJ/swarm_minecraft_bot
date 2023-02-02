@@ -1,2 +1,4 @@
 # swarm_minecraft_bot
-In development 
+/!\ In development 
+
+Go to https://github.com/PrismarineJS/mineflayer
