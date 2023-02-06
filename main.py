@@ -74,6 +74,10 @@ class MyBot:
         return self.position.z
     
     def get_nearest_entity(self, type_entity: List[str]):
+        """
+        return the nearest entity in the list type_entity
+        :param List[str] type_entity: list of entity type like ["hostile", "animal", "mob"]
+        """
         nearest_entity = None
         nearest_distance = 1000
         for entity_id in self.bot.entities:
@@ -88,14 +92,31 @@ class MyBot:
         return nearest_entity
                 
     def distance(self, x: float, y: float, z: float) -> float:
+        """calcul distance between self and (x, y, z)"""
         return math.sqrt((x-self.x)**2 + (z-self.z)**2 + (z-self.z)**2)
     
     def distance_pos(self, position: Vec3) -> float:
+        """calcul distance between self and position
+        :param Vec3 position: 
+        """
         return self.distance(position.x, position.y, position.z)
             
     
 class FirstBot(MyBot, threading.Thread):
+    """FirstBot
+    herited from :py:class:`MyBot` and :py:class:`threading.Thread`.
+    
+    This bot use a state machine: :py:meth:`state_machine`.
+    
+    """
     def __init__(self, name: str, host: str, port: Union[str, int], player_name: str):
+        """__init__ _summary_
+
+        :param str name: bot name
+        :param str host: server host
+        :param str/int port: server port
+        :param str player_name: bot master name
+        """
         threading.Thread.__init__(self)
         MyBot.__init__(self, name=name, host=host, port=port)
         
@@ -107,17 +128,23 @@ class FirstBot(MyBot, threading.Thread):
         self.current_objectif = None
     
     def state_machine(self):
+        """
+        1. find target
+        2. go to target position
+        3. kill target entity
+        => find target
+        """
         if self.current_state is None:
-            self.current_state = "find_traget"
+            self.current_state = "find_target"
         
-        if self.current_state == "find_traget":
+        if self.current_state == "find_target":
             self.current_objectif = self.get_entity(["hostile", "animal", "mob"])
             
             if self.current_objectif:
                 self.current_goal = self.current_objectif.position
                 self.current_state = "go"
             else:
-                self.current_state = "find_traget"
+                self.current_state = "find_target"
         
         if self.current_state == "go":
             if self.distance_pos(self.current_goal) < 2:
@@ -127,7 +154,7 @@ class FirstBot(MyBot, threading.Thread):
         
         if self.current_state == "kill":
             if not self.current_objectif.isValid:
-                self.current_state = "find_traget"
+                self.current_state = "find_target"
             else:
                 if self.distance_pos(self.current_goal) < 2:
                     self.bot.attack(self.current_objectif)
@@ -144,6 +171,9 @@ class FirstBot(MyBot, threading.Thread):
         super().print(self.master, *args)
     
     def on_msg(self, this, sender, message, *args):
+        """event message javascript
+        this event handler is set by :py:meth:`MyBot.load_event`
+        """
         if sender == self.name:
             return 
         if sender == self.master:
@@ -178,7 +208,7 @@ class FirstBot(MyBot, threading.Thread):
         
 if __name__ == "__main__":
     for i in range(3):
-        mybot = FirstBot(f"test_pe_{i}", "minecraft3038.omgserv.com",10003, "Widarrr")
+        mybot = FirstBot(f"bot_{i}", "host", "port", "user_id")
         
         mybot.create()
         mybot.print("hello world")
