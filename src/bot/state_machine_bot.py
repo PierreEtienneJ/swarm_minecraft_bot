@@ -1,107 +1,13 @@
-import javascript
 import random
 import time
-from typing import Union, List, Callable, Tuple, Any
-import matplotlib.pyplot as plt
-import math
 import threading
+from typing import Union, List, Callable, Tuple, Any
 
-mineflayer = javascript.require("mineflayer")
-pathfinder = javascript.require('mineflayer-pathfinder')
-Vec3 = javascript.require('vec3').Vec3
+try:
+    from mybot import MyBot
+except:
+    from bot.mybot import MyBot
 
-class MyBot:
-    def __init__(self, name: str, host: str, port: Union[str, int]):
-        self.name = name
-        self.host = host
-        self.port = port
-        self.bot = None
-        self._mc_data = None
-        self.event_list = []
-        """List[Tuple[str, Callable[[Tuple[Any]], None]]]"""
-        self._movement = None
-        
-    def create(self):
-        self.bot = mineflayer.createBot({
-            "host":self.host,
-            "port":self.port, 
-            "username":self.name,
-            "hideErrors":False
-        })
-        javascript.once(self.bot, "login")
-        
-        self.bot.loadPlugin(pathfinder.pathfinder)
-        self._mc_data = javascript.require("minecraft-data")(self.bot.version)
-        self._movement = pathfinder.Movements(self.bot, self._mc_data)
-        
-        
-        self.load_event()
-        
-    def print(self, *args):
-        msg = " ".join(args)
-        self.bot.chat(msg)
-        print(self.name, *args)
-        
-    def load_event(self):
-        for event, event_function in self.event_list:
-            @javascript.On(self.bot, event)
-            def function(*args):
-                return event_function(*args)
-    
-    def go_to(self, x: float, y: float, z: float):
-        RANGE_GOAL = 1
-        self.bot.pathfinder.setMovements(self._movement)
-        goal = pathfinder.goals.GoalNear(x, y, z, RANGE_GOAL)
-        self.bot.pathfinder.setGoal(goal)
-        
-    def got_to_pos(self, position: Vec3):
-        return self.go_to(position.x, position.y, position.z)
-    
-    @property
-    def position(self):
-        return self.bot.entity.position
-    
-    @property
-    def x(self):
-        return self.position.x 
-    
-    @property
-    def y(self):
-        return self.position.y
-    
-    @property
-    def z(self):
-        return self.position.z
-    
-    def get_nearest_entity(self, type_entity: List[str]):
-        """
-        return the nearest entity in the list type_entity
-        :param List[str] type_entity: list of entity type like ["hostile", "animal", "mob"]
-        """
-        nearest_entity = None
-        nearest_distance = 1000
-        for entity_id in self.bot.entities:
-            entity = self.bot.entities[entity_id]
-            if entity:
-                if entity.type:
-                    if entity.type.lower() in type_entity:
-                        d = self.distance_pos(entity.position)
-                        if nearest_distance > d:
-                            nearest_distance = d
-                            nearest_entity = entity
-        return nearest_entity
-                
-    def distance(self, x: float, y: float, z: float) -> float:
-        """calcul distance between self and (x, y, z)"""
-        return math.sqrt((x-self.x)**2 + (z-self.z)**2 + (z-self.z)**2)
-    
-    def distance_pos(self, position: Vec3) -> float:
-        """calcul distance between self and position
-        :param Vec3 position: 
-        """
-        return self.distance(position.x, position.y, position.z)
-            
-    
 class FirstBot(MyBot, threading.Thread):
     """FirstBot
     herited from :py:class:`MyBot` and :py:class:`threading.Thread`.
@@ -206,12 +112,3 @@ class FirstBot(MyBot, threading.Thread):
             self.print(msg)
         self.__current_state = value
         
-if __name__ == "__main__":
-    for i in range(3):
-        mybot = FirstBot(f"bot_{i}", "host", "port", "user_id")
-        
-        mybot.create()
-        mybot.print("hello world")
-        mybot.start()
-        
-    
