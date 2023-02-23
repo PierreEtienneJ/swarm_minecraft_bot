@@ -6,17 +6,17 @@ from typing import Union, List, Callable, Tuple, Any
 try:
     from mybot import MyBot
 except:
-    from bot.mybot import MyBot
+    from swarm_minecraft_bot.mybot import MyBot
 
-class FirstBot(MyBot, threading.Thread):
-    """FirstBot
+
+class StateBot(MyBot, threading.Thread):
+    """StateBot
     herited from :py:class:`MyBot` and :py:class:`threading.Thread`.
     
     This bot use a state machine: :py:meth:`state_machine`.
-    
     """
     def __init__(self, name: str, host: str, port: Union[str, int], player_name: str):
-        """__init__ _summary_
+        """__init__
 
         :param str name: bot name
         :param str host: server host
@@ -99,10 +99,16 @@ class FirstBot(MyBot, threading.Thread):
 
     @property
     def current_state(self):
+        """
+        state machine current_state
+        """
         return self.__current_state
     
     @current_state.setter
     def current_state(self, value):
+        """
+        set machine current_state
+        """
         if value != self.current_state:
             msg = f"change state to {value}"
             if value == "go":
@@ -111,4 +117,13 @@ class FirstBot(MyBot, threading.Thread):
                 msg += f" {self.current_objectif.name}"
             self.print(msg)
         self.__current_state = value
+        
+
+if __name__ == "__main__":
+    for i in range(3):
+        mybot = FirstBot(f"bot_{i}", "host", "port", "user_id")
+        
+        mybot.create()
+        mybot.print("hello world")
+        mybot.start()
         
