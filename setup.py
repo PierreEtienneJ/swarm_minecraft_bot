@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
   
 setup(
     name='swarm_minecraft_bot',
@@ -8,4 +8,7 @@ setup(
     install_requires=[
         'javascript',
     ],
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    include_package_data=True
 )

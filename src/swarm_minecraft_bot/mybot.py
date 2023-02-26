@@ -1,27 +1,28 @@
 import random
 import time
-from typing import Union, List, Callable, Tuple, Any
+from typing import Union, List, Callable, Tuple, Any, Dict
 import math
 import threading
 
 import javascript
 
+from swarm_minecraft_bot import mc
+
 mineflayer = javascript.require("mineflayer")
 pathfinder = javascript.require('mineflayer-pathfinder')
 Vec3 = javascript.require('vec3').Vec3
 
-class MyBot:
+class MyBot(mc.Entity):
     """
-    master class bot:
+    master class bot herited from mc.Entity:
 
-    :ivar str name:
     :ivar str host:
     :ivar str/int port:
     :ivar List[Tuple[str, Callable[[Tuple[Any]], None]] event_list: list of event [(event, callbacks)]
     :ivar bot:
     """
     def __init__(self, name: str, host: str, port: Union[str, int]):
-        self.name = name
+        super().__init__(name = name, entity_type = mc.TypeEntity.BOT)
         self.host = host
         self.port = port
         self.bot = None
@@ -77,7 +78,7 @@ class MyBot:
         goal = pathfinder.goals.GoalNear(x, y, z, RANGE_GOAL)
         self.bot.pathfinder.setGoal(goal)
         
-    def got_to_pos(self, position: Vec3):
+    def got_to_pos(self, position: mc.Vector3):
         """
         go to position
         :param Vec3 position:
@@ -85,11 +86,11 @@ class MyBot:
         return self.go_to(position.x, position.y, position.z)
     
     @property
-    def position(self):
+    def position(self) -> mc.Vector3:
         """
         bot position
         """
-        return self.bot.entity.position
+        return mc.Vector3.from_Vec3(self.bot.entity.position)
     
     @property
     def x(self):
@@ -137,12 +138,26 @@ class MyBot:
         :param float y:
         :param float z:
         """
-        return math.sqrt((x-self.x)**2 + (z-self.z)**2 + (z-self.z)**2)
+        return self.position.distance(mc.Vector3(x, y, z))
     
-    def distance_pos(self, position: Vec3) -> float:
+    def distance_pos(self, position: mc.Vector3) -> float:
         """calcul distance between self and position
-        :param Vec3 position: 
+        :param mc.Vector3 position: 
         """
-        return self.distance(position.x, position.y, position.z)
+        return self.position.distance(position)
+
+    def __dict__(self) -> Dict[str, Any]:
+        """
+        this function return the log of the bot
+        Returns
+        -------
+        Dict[str, Any]
+            - position: (x, y, z)
+            - entity: [{type, position}]
+        """
+        rdict = {
+            "position": {"x": self.x, "y": self.y, "z": self.z},
+            "entity": []
+        }
 
     

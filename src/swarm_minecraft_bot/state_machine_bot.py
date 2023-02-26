@@ -3,15 +3,11 @@ import time
 import threading
 from typing import Union, List, Callable, Tuple, Any
 
-try:
-    from mybot import MyBot
-except:
-    from swarm_minecraft_bot.mybot import MyBot
+from swarm_minecraft_bot import mybot
 
-
-class StateBot(MyBot, threading.Thread):
+class StateBot(mybot.MyBot, threading.Thread):
     """StateBot
-    herited from :py:class:`MyBot` and :py:class:`threading.Thread`.
+    herited from :py:class:`mybot.MyBot` and :py:class:`threading.Thread`.
     
     This bot use a state machine: :py:meth:`state_machine`.
     """
@@ -24,7 +20,7 @@ class StateBot(MyBot, threading.Thread):
         :param str player_name: bot master name
         """
         threading.Thread.__init__(self)
-        MyBot.__init__(self, name=name, host=host, port=port)
+        mybot.MyBot.__init__(self, name=name, host=host, port=port)
         
         self.master = player_name
         self.event_list.append(("chat", self.on_msg))
@@ -44,7 +40,7 @@ class StateBot(MyBot, threading.Thread):
             self.current_state = "find_target"
         
         if self.current_state == "find_target":
-            self.current_objectif = self.get_entity(["hostile", "animal", "mob"])
+            self.current_objectif = self.get_nearest_entity(["hostile", "animal", "mob"])
             
             if self.current_objectif:
                 self.current_goal = self.current_objectif.position
@@ -121,7 +117,7 @@ class StateBot(MyBot, threading.Thread):
 
 if __name__ == "__main__":
     for i in range(3):
-        mybot = FirstBot(f"bot_{i}", "host", "port", "user_id")
+        mybot = StateBot(f"bot_{i}", "host", "port", "user_id")
         
         mybot.create()
         mybot.print("hello world")
