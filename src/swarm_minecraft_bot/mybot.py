@@ -81,55 +81,67 @@ class MyBot(mc.Entity):
     def got_to_pos(self, position: mc.Vector3):
         """
         go to position
-        :param Vec3 position:
+        :param mc.Vector3 position:
         """
         return self.go_to(position.x, position.y, position.z)
     
     @property
-    def position(self) -> mc.Vector3:
-        """
-        bot position
-        """
-        return mc.Vector3.from_Vec3(self.bot.entity.position)
-    
+    def _position(self):
+        self.update_from_js_entity(self.bot.entity)
+        return self.position
+
     @property
     def x(self):
         """
         bot x position
         """
-        return self.position.x 
+        return self._position.x 
     
     @property
     def y(self):
         """
         bot y position
         """
-        return self.position.y
+        return self._position.y
     
     @property
     def z(self):
         """
         bot z position
         """
-        return self.position.z
+        return self._position.z
     
-    def get_nearest_entity(self, type_entity: List[str]):
+    @property
+    def nearest_entity(self) -> List[mc.Entity]:
+        rlist = []
+        for entity_id in self.bot.entities:
+            entity = self.bot.entities[entity_id]
+            if not entity is None:
+                entity_e = mc.Entity.from_js_entity(entity)
+                if not entity_e is None:
+                    rlist.append(entity) # FIXME entity_e
+                else:
+                    raise TypeError(f"error with entity {entity}, {entity_e}")
+        return rlist
+
+    def get_nearest_entity(self, type_entity: List[mc.TypeEntity]) -> mc.Entity:
         """
         return the nearest entity in the list type_entity
         :param List[str] type_entity: list of entity type like ["hostile", "animal", "mob"]
         :return: nearest_entity
         """
+        self.print("start find")
+        t0 = time.time()
         nearest_entity = None
-        nearest_distance = 1000
-        for entity_id in self.bot.entities:
-            entity = self.bot.entities[entity_id]
-            if entity:
-                if entity.type:
-                    if entity.type.lower() in type_entity:
-                        d = self.distance_pos(entity.position)
-                        if nearest_distance > d:
-                            nearest_distance = d
-                            nearest_entity = entity
+        nearest_distance = 1e9
+        for entity in self.nearest_entity:
+            if entity.type in type_entity:
+                d = self.distance_pos(entity.position)
+                if d < nearest_distance:
+                    nearest_distance = d
+                    nearest_entity = entity
+                
+        self.print(f"{t0 - time.time() : 0.1f}s to find entity")
         return nearest_entity
                 
     def distance(self, x: float, y: float, z: float) -> float:
@@ -138,13 +150,14 @@ class MyBot(mc.Entity):
         :param float y:
         :param float z:
         """
-        return self.position.distance(mc.Vector3(x, y, z))
+        self.update_from_js_entity(self.bot.entity)
+        return self._position.distance(mc.Vector3(x, y, z))
     
     def distance_pos(self, position: mc.Vector3) -> float:
         """calcul distance between self and position
         :param mc.Vector3 position: 
         """
-        return self.position.distance(position)
+        return self._position.distance(position)
 
     def __dict__(self) -> Dict[str, Any]:
         """
@@ -155,9 +168,7 @@ class MyBot(mc.Entity):
             - position: (x, y, z)
             - entity: [{type, position}]
         """
-        rdict = {
-            "position": {"x": self.x, "y": self.y, "z": self.z},
-            "entity": []
-        }
+        return dict(super())
+
 
     

@@ -4,6 +4,7 @@ import threading
 from typing import Union, List, Callable, Tuple, Any
 
 from swarm_minecraft_bot import mybot
+from swarm_minecraft_bot import mc
 
 class StateBot(mybot.MyBot, threading.Thread):
     """StateBot
@@ -39,12 +40,19 @@ class StateBot(mybot.MyBot, threading.Thread):
         if self.current_state is None:
             self.current_state = "find_target"
         
+        if not self.current_objectif is None:
+            if not self.current_objectif.isValid:
+                self.current_state = "find_target"
+
         if self.current_state == "find_target":
-            self.current_objectif = self.get_nearest_entity(["hostile", "animal", "mob"])
+            self.current_objectif = self.get_nearest_entity(["hostile", "animal", "mob"])# [mc.TypeEntity.HOSTILE, mc.TypeEntity.ANIMAL, mc.TypeEntity.MOB])
             
             if self.current_objectif:
-                self.current_goal = self.current_objectif.position
-                self.current_state = "go"
+                if self.current_objectif.isValid:
+                    self.current_goal = self.current_objectif.position
+                    self.current_state = "go"
+                else:
+                    self.current_state = "find_target"
             else:
                 self.current_state = "find_target"
         
@@ -65,9 +73,11 @@ class StateBot(mybot.MyBot, threading.Thread):
                     self.current_state = "go"
     
     def run(self):
-        while True:
+        while True:  # TODO detect when kick
+            self.update_from_js_entity(self.bot.entity)
             self.state_machine()
             time.sleep(0.3)
+        exit(1)
     
     def print(self, *args):
         super().print(self.master, *args)
@@ -108,7 +118,7 @@ class StateBot(mybot.MyBot, threading.Thread):
         if value != self.current_state:
             msg = f"change state to {value}"
             if value == "go":
-                msg += f" on {self.current_goal.toString()} at {self.distance_pos(self.current_goal) : 0.1f} blocks"
+                msg += f" on {self.current_goal} at {self.distance_pos(self.current_goal) : 0.1f} blocks"
             if value == "kill":
                 msg += f" {self.current_objectif.name}"
             self.print(msg)
